@@ -1,0 +1,19 @@
+// rmw_zenoh_cpp 的 session 設定：所有節點連到 Pi 上的 zenoh router。
+// 用法：
+//   export RMW_IMPLEMENTATION=rmw_zenoh_cpp
+//   export ZENOH_SESSION_CONFIG_URI=$(pwd)/zenoh_session_config.json5
+// 把 <PI-IP> 換成執行 rmw_zenohd 的主機 IP。
+{
+  mode: "peer",
+  connect: {
+    endpoints: ["tcp/<PI-IP>:7447"],
+  },
+  scouting: {
+    multicast: {
+      enabled: false,   // Wi-Fi 上關閉 multicast scouting，改由 router 統一 discovery
+    },
+    gossip: {
+      enabled: true,
+    },
+  },
+}

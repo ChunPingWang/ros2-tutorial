@@ -1,0 +1,24 @@
+# /etc/systemd/system/ros2-pi-gpio.service
+# 先建立 /etc/ros2/env，內容例如：
+#   ROS_DOMAIN_ID=42
+#   RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+[Unit]
+Description=ROS 2 Raspberry Pi GPIO node
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+EnvironmentFile=-/etc/ros2/env
+Environment=HOME=/home/ubuntu
+WorkingDirectory=/home/ubuntu/ros2_ws
+ExecStart=/bin/bash -lc 'source /opt/ros/jazzy/setup.bash && source /home/ubuntu/ros2_ws/install/setup.bash && exec ros2 run pi_gpio gpio_node'
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGINT
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

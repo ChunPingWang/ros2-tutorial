@@ -1,0 +1,20 @@
+# ROS 2 workspaces
+**/ros2_ws/build/
+**/ros2_ws/install/
+**/ros2_ws/log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# STM32CubeIDE
+examples/stm32/Debug/
+examples/stm32/Release/
+examples/stm32/.settings/
+examples/stm32/micro_ros_stm32cubemx_utils/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
