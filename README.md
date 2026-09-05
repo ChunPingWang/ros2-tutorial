@@ -7,6 +7,7 @@
 | [第 1 章](docs/01-arduino-uno-q.md) | Arduino UNO Q | Linux 側以 Docker 執行 ROS 2，MCU 側用 Bridge RPC 接手即時 I/O | 帶 Linux 的邊緣控制器 |
 | [第 2 章](docs/02-raspberry-pi.md) | Raspberry Pi 4 / 5 | Ubuntu 24.04 原生安裝 ROS 2 Jazzy | 機器人主腦、閘道、感知節點 |
 | [第 3 章](docs/03-stm32-micro-ros.md) | STM32（Nucleo 系列） | micro-ROS + FreeRTOS，透過 micro-ROS Agent 接入 | 硬即時的馬達與感測器節點 |
+| [第 4 章](docs/04-cmake.md) | 全部 | ament_cmake、自訂訊息、C++ 節點、STM32 的 CMake 專案 | 建置系統與跨板介面契約 |
 
 ## 為什麼是這三種板子
 
@@ -39,6 +40,7 @@
 | `/pi/button` | `std_msgs/Bool` | Pi | 任何節點 |
 | `/stm32/led` | `std_msgs/Bool` | 任何節點 | STM32 |
 | `/stm32/heartbeat` | `std_msgs/Int32` | STM32 | 任何節點 |
+| `/boards/status` | `tutorial_interfaces/BoardStatus` | 第 4 章的 C++ 節點 | 上層系統 |
 
 跨板通訊的共同前提：
 
@@ -51,6 +53,7 @@
 - 只想快速看到 ROS 2 跑起來：先讀第 2 章（Raspberry Pi），它是最標準的安裝路徑。
 - 手上有 UNO Q：直接讀第 1 章，它同時涵蓋 Linux 側與 MCU 側。
 - 需要硬即時控制：讀第 3 章，micro-ROS 的建置流程與前兩章差異最大。
+- 要寫 C++ 節點、自訂訊息，或把韌體納入 CI：讀第 4 章。
 
 ## 目錄結構
 
@@ -58,7 +61,8 @@
 docs/                        教學章節
 examples/uno_q/              第 1 章範例：Sketch、Host 端橋接服務、ROS 2 套件、Docker
 examples/raspberry_pi/       第 2 章範例：ROS 2 套件、systemd 服務、Zenoh 設定
-examples/stm32/              第 3 章範例：micro-ROS 應用程式碼與 FreeRTOS 整合
+examples/stm32/              第 3 章範例：micro-ROS 應用程式碼、FreeRTOS 整合、CMake toolchain file
+examples/cmake/              第 4 章範例：自訂訊息套件與彙整三塊板子狀態的 C++ 節點
 ```
 
 ## 版本假設
@@ -70,5 +74,6 @@ examples/stm32/              第 3 章範例：micro-ROS 應用程式碼與 Free
 | Arduino App Lab | 2025 年 10 月後的正式版 |
 | micro-ROS | jazzy 分支 |
 | STM32CubeIDE | 1.16 以上 |
+| CMake | 3.28（Ubuntu 24.04 內建） |
 
 若改用 Humble，套件名稱大多只需把 `jazzy` 換成 `humble`，但 `rmw_zenoh_cpp` 在 Humble 上仍屬實驗性質。
