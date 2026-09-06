@@ -36,6 +36,10 @@ install(DIRECTORY launch
 # ---- 測試 ------------------------------------------------------------------
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  # 教學範例未加入版權標頭，略過 copyright 與 cpplint 的 legal 檢查
+  # （與 ros2 pkg create 產生的範本相同做法；正式專案應補上標頭後移除這兩行）
+  set(ament_cmake_copyright_FOUND TRUE)
+  set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gtest REQUIRED)

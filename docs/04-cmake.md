@@ -64,7 +64,7 @@ target_link_libraries(board_monitor_node PUBLIC
   ${std_msgs_TARGETS}
   ${tutorial_interfaces_TARGETS})
 ```
-這是 **Jazzy 建議的現代寫法**：直接連結 CMake target，而不是舊教材裡的 `ament_target_dependencies()`。`rclcpp::rclcpp` 是 rclcpp 匯出的 target；訊息套件則提供 `<pkg>_TARGETS` 變數，內含 C++ 型別支援的所有 target。兩種寫法在 Jazzy 上都能用，但 `ament_target_dependencies` 已標記為 deprecated，新專案不要再用。
+這是 **Jazzy 建議的現代寫法**：直接連結 CMake target，而不是舊教材裡的 `ament_target_dependencies()`。`rclcpp::rclcpp` 是 rclcpp 匯出的 target；訊息套件則提供 `<pkg>_TARGETS` 變數，內含 C++ 型別支援的所有 target。兩種寫法在 Jazzy 上都能用；`ament_target_dependencies` 自 Kilted 起正式標記為 deprecated（Jazzy 尚未出警告，但官方教學已全面改用 `target_link_libraries`），新專案不要再用。
 
 ```cmake
 install(TARGETS board_monitor_node DESTINATION lib/${PROJECT_NAME})
@@ -158,7 +158,7 @@ ament_export_dependencies(rosidl_default_runtime)
 
 - 用 `rclcpp::Node` 的 lambda 訂閱，三個 callback 只更新成員變數。
 - `stm32_alive` 由「最後一次收到 heartbeat 的時間」與參數 `stm32_timeout_sec` 決定，STM32 斷線後 1 秒內會反映出來。
-- 訂閱使用 `rclcpp::SensorDataQoS()`，與 micro-ROS 預設的 best-effort 相容。用預設的 reliable QoS 會收不到 STM32 的資料，這是跨 micro-ROS 最常踩的坑。
+- 訂閱使用 `rclcpp::SensorDataQoS()`（best-effort）。micro-ROS 的 `rclc_*_init_default` 其實是 reliable，但許多 micro-ROS 專案為了節省序列頻寬會改用 `rclc_publisher_init_best_effort`；best-effort 訂閱端與兩種發布端都相容，而 reliable 訂閱端配 best-effort 發布端會完全收不到資料——這是跨 micro-ROS 最常踩的坑。
 
 ### 建置與執行
 

@@ -143,13 +143,18 @@ ros2 topic echo /uno_q/analog0 --field data | while read v; do
 done
 
 # 終端 2：Pi 按鈕直接轉發給 STM32
+# 注意：echo --field 印出的是 Python 風格的 True / False（字首大寫）
 ros2 topic echo /pi/button --field data | while read v; do
-  [[ "$v" == "true" || "$v" == "false" ]] || continue
-  ros2 topic pub --once /stm32/led std_msgs/msg/Bool "{data: $v}" >/dev/null
+  case "$v" in
+    True)  s=true ;;
+    False) s=false ;;
+    *)     continue ;;
+  esac
+  ros2 topic pub --once /stm32/led std_msgs/msg/Bool "{data: $s}" >/dev/null
 done
 ```
 
-正式系統應把這類邏輯寫成節點，而不是 shell 迴圈。這裡只是驗證三板互通。
+正式系統應把這類邏輯寫成節點，而不是 shell 迴圈——每次 `ros2 topic pub --once` 都要重新建立節點與 discovery，延遲以秒計，跟不上高頻輸入。這裡只是驗證三板互通。
 
 ## 2.7 Wi-Fi 上 discovery 不穩定的解法：Zenoh
 
@@ -179,7 +184,7 @@ ros2 run pi_gpio gpio_node
 注意事項：
 
 - 同一個系統內所有節點必須用同一種 RMW。DDS 與 Zenoh 節點彼此看不到。
-- micro-ROS Agent 目前只支援 DDS。若切到 Zenoh，STM32 需透過 Pi 上一個同時載入兩種 RMW 的 bridge，或改用 Zenoh-pico。這部分在第 3 章 3.9 節說明。
+- micro-ROS Agent 目前只支援 DDS。若切到 Zenoh，STM32 需透過 Pi 上的 `zenoh-bridge-ros2dds` 轉發，或改用 Zenoh-pico。這部分在第 3 章 3.9 節說明。
 
 ## 2.8 相機與 LiDAR
 
@@ -189,7 +194,7 @@ ros2 run pi_gpio gpio_node
 |------|------|------|
 | Pi Camera Module 3 | `camera_ros`（libcamera 後端） | `sudo apt install ros-jazzy-camera-ros` |
 | USB 相機 | `usb_cam` 或 `v4l2_camera` | 隨插即用 |
-| RPLIDAR A1/A2 | `rplidar_ros` | 需從原始碼編譯 |
+| RPLIDAR A1/A2 | `rplidar_ros` | `sudo apt install ros-jazzy-rplidar-ros` |
 | LD19 / LD06 | `ldlidar_stl_ros2` | 從原始碼編譯 |
 
 在 Pi 5 上，`camera_ros` 以 640x480 30 fps 發布 raw image 約用一顆核心的 40%。若要傳到筆電看，改用 `image_transport` 的 compressed 格式。

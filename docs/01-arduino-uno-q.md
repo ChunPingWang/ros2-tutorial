@@ -20,7 +20,7 @@ Arduino UNO Q 是 Arduino 被 Qualcomm 收購後推出的第一塊「雙腦」�
 | **A. Docker 容器（本章採用）** | 用官方 `ros:jazzy` 映像，10 分鐘可用；不污染 Debian 系統 | 容器內看不到 App Lab 的 Python 套件，需要一個小型橋接服務 |
 | B. 原生安裝 | 節點可直接 `import arduino.app_utils` | Debian 是 ROS 2 的 Tier 3 平台，沒有 apt 二進位套件，必須從原始碼編譯，在 A53 上約需數小時 |
 
-本章採用路徑 A，並用一個 40 行的 Python 服務把 Bridge 暴露成本機 TCP 介面，讓容器內的 ROS 2 節點可以呼叫。這種「宿主機做硬體代理、容器做 ROS 2」的分層在工業現場也是常見做法，方便日後把容器搬到別的主機上。
+本章採用路徑 A，並用一個 70 行的 Python 服務把 Bridge 暴露成本機 TCP 介面，讓容器內的 ROS 2 節點可以呼叫。這種「宿主機做硬體代理、容器做 ROS 2」的分層在工業現場也是常見做法，方便日後把容器搬到別的主機上。
 
 ## 1.3 系統架構
 

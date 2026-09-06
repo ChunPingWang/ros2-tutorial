@@ -1,4 +1,4 @@
-"""啟動 board_monitor，並允許用 launch 參數覆寫 STM32 逾時秒數。"""
+"""啟動 board_monitor，並允許用 launch 參數覆寫 STM32 逾時秒數."""
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration

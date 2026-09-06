@@ -44,8 +44,10 @@ void *microros_zero_allocate(size_t number_of_elements, size_t size_of_element, 
 #define LED_TOPIC        "/stm32/led"
 #define HEARTBEAT_MS     100
 #define EXECUTOR_HANDLES 2   /* 1 timer + 1 subscription */
+#define APP_DOMAIN_ID    42  /* 與其他板子一致；Agent 端的 ROS_DOMAIN_ID 無法替 client 設定 */
 
 static rcl_allocator_t     allocator;
+static rcl_init_options_t  init_options;
 static rclc_support_t      support;
 static rcl_node_t          node;
 static rcl_publisher_t     heartbeat_pub;
@@ -86,7 +88,16 @@ static bool create_entities(void)
 {
     allocator = rcl_get_default_allocator();
 
-    if (rclc_support_init(&support, 0, NULL, &allocator) != RCL_RET_OK) {
+    /* Domain ID 必須由 client 端在 init options 設定，
+     * Agent 端的 ROS_DOMAIN_ID 環境變數不會影響 client 建立的實體。 */
+    init_options = rcl_get_zero_initialized_init_options();
+    if (rcl_init_options_init(&init_options, allocator) != RCL_RET_OK) {
+        return false;
+    }
+    if (rcl_init_options_set_domain_id(&init_options, APP_DOMAIN_ID) != RCL_RET_OK) {
+        return false;
+    }
+    if (rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator) != RCL_RET_OK) {
         return false;
     }
     if (rclc_node_init_default(&node, NODE_NAME, "", &support) != RCL_RET_OK) {
@@ -141,6 +152,7 @@ static void destroy_entities(void)
     (void)rcl_publisher_fini(&heartbeat_pub, &node);
     (void)rcl_node_fini(&node);
     (void)rclc_support_fini(&support);
+    (void)rcl_init_options_fini(&init_options);
 }
 
 /* --- 進入點 ------------------------------------------------------------- */

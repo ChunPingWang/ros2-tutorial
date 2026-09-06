@@ -24,8 +24,9 @@ public:
     stm32_timeout_sec_ = declare_parameter<double>("stm32_timeout_sec", 1.0);
     const double publish_rate_hz = declare_parameter<double>("publish_rate_hz", 1.0);
 
-    // micro-ROS 預設是 best-effort，用 SensorDataQoS 才收得到 STM32 的資料。
-    // 三個訂閱統一用同一個 QoS，避免日後有人把 Pi 節點也改成 best-effort 時收不到。
+    // SensorDataQoS 是 best-effort：與 reliable（rclc_*_init_default）及
+    // best-effort 的發布端都相容；reliable 訂閱端配 best-effort 發布端會收不到。
+    // 三個訂閱統一用同一個 QoS，避免日後有節點改成 best-effort 時收不到。
     const auto qos = rclcpp::SensorDataQoS();
 
     analog_sub_ = create_subscription<std_msgs::msg::Int32>(

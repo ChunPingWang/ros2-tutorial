@@ -127,7 +127,11 @@ rcutils_set_default_allocator(&freeRTOS_allocator);
 // 等待 Agent
 while (rmw_uros_ping_agent(100, 1) != RMW_RET_OK) { osDelay(500); }
 
-rclc_support_init(&support, 0, NULL, &allocator);
+// Domain ID 必須在 client 端設定（Agent 的環境變數無法代設），與其他板子一致用 42
+init_options = rcl_get_zero_initialized_init_options();
+rcl_init_options_init(&init_options, allocator);
+rcl_init_options_set_domain_id(&init_options, 42);
+rclc_support_init_with_options(&support, 0, NULL, &init_options, &allocator);
 rclc_node_init_default(&node, "stm32_node", "", &support);
 rclc_publisher_init_default(&heartbeat_pub, &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32), "/stm32/heartbeat");
@@ -159,9 +163,10 @@ ls /dev/ttyACM*
 
 ```bash
 docker run -it --rm --privileged --net=host -v /dev:/dev \
-  -e ROS_DOMAIN_ID=42 \
   microros/micro-ros-agent:jazzy serial --dev /dev/ttyACM0 -b 115200 -v4
 ```
+
+注意：Domain ID 是由韌體內的 `rcl_init_options_set_domain_id(42)` 決定的。在 Agent 上設 `ROS_DOMAIN_ID` 環境變數**不會**替 client 設定 domain——client 沒設的話實體會落在 domain 0，其他板子就看不到。
 
 看到 `session established` 表示 STM32 已連上。若在 Pi 上想常駐，把它寫成 systemd 服務，作法與第 2 章相同，只是 `ExecStart` 換成上面的 `docker run` 指令並拿掉 `-it`。
 
@@ -185,12 +190,13 @@ ros2 topic pub --once /stm32/led std_msgs/msg/Bool "{data: true}"
 | 初始化後 HardFault | Task stack 不足，調到 3000 words 以上 |
 | `rclc_executor_init` 失敗 | handle 數量少於 timer 加 subscription |
 | 跑一陣子後 subscription 不再觸發 | 已知的 DMA 接收環形緩衝區問題，更新到 utils 最新 commit，或在 `led_cb` 裡避免阻塞 |
+| Agent 有 `session established`，但其他機器看不到 `/stm32/*` | client 端沒設 domain id（預設 0），與系統的 42 不一致；見 3.6 節的 `rcl_init_options_set_domain_id` |
 
 ## 3.9 與前兩章整合時的注意事項
 
 - **Agent 放哪裡**：建議放在第 2 章的 Pi 上。UNO Q 的 Linux 側也可以跑 Agent，但 UNO Q 的 USB 埠數量有限，且它自己已有一顆 MCU。
-- **Domain ID**：由 Agent 的環境變數決定，STM32 端不用設。
-- **Zenoh**：Agent 只支援 DDS。若整個系統改用 rmw_zenoh_cpp，有兩個選擇：一是 Agent 主機同時跑一個 `domain_bridge` 節點在 DDS 與 Zenoh 之間轉發指定 topic；二是 STM32 改用 Zenoh-pico，直接連 Pi 上的 zenoh router，但那樣就不是 micro-ROS，失去 rclc API。目前生產環境多數仍用 DDS 加 Agent。
+- **Domain ID**：必須在 client 端（STM32 韌體）以 `rcl_init_options_set_domain_id` 設定，本章範例已設為 42。Agent 端的 `ROS_DOMAIN_ID` 環境變數對 client 建立的實體沒有作用。
+- **Zenoh**：Agent 只支援 DDS。若整個系統改用 rmw_zenoh_cpp，有兩個選擇：一是在 Agent 主機跑 `zenoh-bridge-ros2dds`（zenoh-plugin-ros2dds），把 DDS 側的 topic 轉發進 Zenoh 網路；二是 STM32 改用 Zenoh-pico，直接連 Pi 上的 zenoh router，但那樣就不是 micro-ROS，失去 rclc API。目前生產環境多數仍用 DDS 加 Agent。
 - **時間同步**：micro-ROS 節點的時間戳來自 STM32 自身時鐘。需要與 Pi 對時的話，用 `rmw_uros_sync_session()` 與 `rmw_uros_epoch_millis()`，範例程式碼已示範。
 
 ## 3.10 進階方向
